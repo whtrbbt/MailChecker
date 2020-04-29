@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.IO;
 using System.Text.RegularExpressions;
+using Excel = Microsoft.Office.Interop.Excel;
 
 
 namespace CSVUtility
@@ -54,6 +55,60 @@ namespace CSVUtility
                 sw.Write(sw.NewLine);
             }
             sw.Close();
+        }
+
+        public static void ToXLSX(this DataTable dtDataTable, string strFilePath, string tmplFileName )
+        {
+            Excel.Application exc = new Microsoft.Office.Interop.Excel.Application();
+            Excel.XlReferenceStyle RefStyle = exc.ReferenceStyle;
+            Excel.Workbook wb = null;
+
+            try
+            {
+                wb = exc.Workbooks.Add(tmplFileName);
+            }
+            catch (SystemException ex)
+            {
+                throw new Exception("Не удалось загрузить шаблон для экспорта" + tmplFileName + "\n" + ex.Message);
+            }
+
+
+            Excel.Worksheet whs1 = wb.Worksheets.get_Item(1) as Excel.Worksheet;
+
+            //Заполняем заголовок таблицы
+            Excel.Range header;
+            Int32 columnCount;
+            columnCount = dtDataTable.Columns.Count;
+
+            object[,] objHeaderData = new Object[1, columnCount];
+
+            for (int i = 0; i < columnCount; i++)
+            {
+                objHeaderData[0, i] = dtDataTable.Columns[i].ToString();
+            }
+            header = whs1.get_Range("A1", "A1");
+            header = header.get_Resize(1, columnCount);
+            header.Value = objHeaderData;
+            
+            int r = 2; //Отступаем одну строку с заголовком
+            int c = 1;
+            foreach (DataRow dr in dtDataTable.Rows)
+            {
+                foreach (DataColumn dc in dtDataTable.Columns)
+                {
+                    Excel.Range excelcell = whs1.Cells[r, c];
+                    excelcell.NumberFormat = "@";
+                    excelcell.Value2 = dr[dc].ToString();
+                    c++;
+                    //Console.WriteLine(dr[dc].ToString());
+                }
+                c = 1;
+                r++;
+            }
+            whs1.Columns.AutoFit();
+            wb.SaveAs(strFilePath);
+            exc.Quit();
+
         }
 
         public static DataTable GetDataTabletFromCSVFile(string csv_file_path)
