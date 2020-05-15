@@ -59,7 +59,7 @@ namespace CSVUtility
             sw.Close();
         }
 
-        public static void ToXLSX(DataTable dtDataTable, string strFilePath, string tmplFileName )
+        public static void ToXLSX(DataTable dtDataTable, string strFilePath, string tmplFileName, bool useHypelink = true )
         // Схраняет DataTable в файл XLXS
         {
             Excel.Application exc = new Microsoft.Office.Interop.Excel.Application();
@@ -95,13 +95,17 @@ namespace CSVUtility
             
             int r = 2; //Отступаем одну строку с заголовком
             int c = 1;
+            string cellValue;
             foreach (DataRow dr in dtDataTable.Rows)
             {
                 foreach (DataColumn dc in dtDataTable.Columns)
                 {
+                    cellValue = dr[dc].ToString();
                     Excel.Range excelcell = whs1.Cells[r, c];
                     excelcell.NumberFormat = "@";
-                    excelcell.Value2 = dr[dc].ToString();
+                    excelcell.Value2 = cellValue;
+                    if (useHypelink && (cellValue.StartsWith("http")))
+                        whs1.Hyperlinks.Add(excelcell, cellValue, Type.Missing, cellValue);
                     c++;
                 }
                 c = 1;
