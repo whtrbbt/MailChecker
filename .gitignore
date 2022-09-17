@@ -337,4 +337,5 @@ ASALocalRun/
 .localhistory/
 
 # BeatPulse healthcheck temp database
-healthchecksdbApp.config
+healthchecksdb
+App.config
